@@ -1,0 +1,93 @@
+
+options {
+  JAVA_UNICODE_ESCAPE = true;
+  DEBUG_PARSER = false;
+  STATIC = false;
+}
+
+PARSER_BEGIN(RamParser)
+    package frontend.generated;
+    import java.io.FileNotFoundException;
+
+    public class RamParser {
+        public static void main(String[] args) 
+        throws ParseException, TokenMgrError, FileNotFoundException
+        {
+            if (args.length == 0) {
+                RamParser parser = new RamParser( System.in ) ;
+                parser.Goal();
+            } else {
+                java.io.InputStream is = new java.io.FileInputStream(new java.io.File(args[0]));
+                RamParser parser = new RamParser( is ) ;
+                parser.Goal();
+            }       
+        }
+    }
+PARSER_END(RamParser)
+
+
+// Insert a specification of a lexical analysis here. 
+
+/* The regular expressions here will be skipped during lexical analysis. No
+tokens are constructed from the productions that are defined here. */
+/*SKIP : {
+
+
+}*/
+
+
+/* Insert the regular expressions for comments here. Special tokens do not
+interact in the parsing process, but can be accessed from the parser. */
+/*SPECIAL_TOKEN: {
+
+
+}*/
+
+
+/* For the regular expressions on the right, the token on the left 
+will be returned */
+TOKEN : {
+
+  // fill these in from Project #2
+
+}
+
+
+
+// The following is a simple grammar that will allow you
+// to test the generated parser. 
+void Goal() :
+{}
+{  
+  /* ( RamToken() )*  <EOF> */
+  Program() <EOF> 
+}
+
+void RamToken():
+{}
+{
+  <CLASS>  |  <IDENTIFIER> | <LBRACE> | <PUBLIC> | <STATIC> | <VOID> |
+  <MAIN> | <LPAREN> | <STRING> | <LSQPAREN> | <RSQPAREN> | <RPAREN> | <RBRACE> |
+  <PLUSEQUALS> | <MINUSEQUALS> | <SEMICOLON> | <RETURN> | <COMMA> | <INTEGER> | <BOOLEAN> | <ASSIGN> |
+  <IF> | <ELSE> | <WHILE> | <COLON> | <PRINT> | <PRINTLN> | <AND> |
+  <OR> | <LESSTHAN> | <EQUALITY> | <PLUS> | <MINUS> | <TIMES> |
+  <DOT> | <LENGTH> | <INTEGER_LITERAL> | <TRUE> | <FALSE> | <THIS> | <NEW> |
+  <EXCLAMATION> 
+  /* add additional token classes as appropriate */
+}
+
+void Program() :
+{}
+{
+    MainClass() ( ClassDecl() )*
+}
+
+void MainClass() :
+{}
+{
+    <CLASS> <IDENTIFIER> <LBRACE> <PUBLIC> <STATIC> <VOID> <MAIN> <LPAREN> 
+    <STRING> <LSQPAREN> <RSQPAREN> <IDENTIFIER> <RPAREN> <LBRACE> 
+    Statement() 
+    <RBRACE> <RBRACE>
+}
+

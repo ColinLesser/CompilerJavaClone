@@ -1,0 +1,337 @@
+options {
+    JAVA_UNICODE_ESCAPE = true;
+    DEBUG_PARSER = true;
+    STATIC = false;
+}
+
+PARSER_BEGIN(RamParser)
+    package frontend.generated;
+    import java.io.FileNotFoundException;
+
+    public class RamParser {
+        public static void main(String[] args) 
+        throws ParseException, TokenMgrError, FileNotFoundException
+        {
+            if (args.length == 0) {
+                RamParser parser = new RamParser( System.in ) ;
+                parser.Goal();
+            } else {
+                java.io.InputStream is = new java.io.FileInputStream(new java.io.File(args[0]));
+                RamParser parser = new RamParser( is ) ;
+                parser.Goal();
+            }       
+        }
+    }
+PARSER_END(RamParser)
+
+
+// Insert a specification of a lexical analysis here. 
+
+SKIP : /* WHITE SPACE */
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| "\f"
+}
+
+SPECIAL_TOKEN : /* COMMENTS */
+{
+  <SINGLE_LINE_COMMENT: "//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+| <FORMAL_COMMENT: "/**" (~["*"])* "*" ("*" | (~["*","/"] (~["*"])* "*"))* "/">
+| <MULTI_LINE_COMMENT: "/*" (~["*"])* "*" ("*" | (~["*","/"] (~["*"])* "*"))* "/">     // regex: http://regexpal.com/   /\*([^*])*\*(\*|([^*/]([^*])*\*))*/         
+}
+
+TOKEN : 
+{
+  < LPAREN: "(" >
+| < RPAREN: ")" >
+| < LSQPAREN: "[" >
+| < RSQPAREN: "]" >
+| < LBRACE: "{" >
+| < RBRACE: "}" >
+| < SEMICOLON: ";" >
+| < COMMA: "," >
+| < COLON: ":" >
+| < DOT: "." >
+| < ASSIGN: "=" >
+| < LESSTHAN: "<" >
+| < GREATERTHAN: ">" >
+| < EQUALITY: "eq" >
+| < NOTEQUAL: "ne" >
+| < LESSTHANOREQUAL: "le" >
+| < GREATERTHANOREQUAL: "ge" >
+| < PLUSEQUALS: "+=" >
+| < MINUSEQUALS: "-=" >
+| < PLUS: "+" >
+| < MINUS: "-" >
+| < TIMES: "*" >
+| < AND : "and" >   
+| < OR : "or" >
+| < NOT : "!" >   
+| < BOOLEAN: "bool" >   
+| < CLASS: "class" >
+| < ELSE: "else" >
+| < FALSE: "false" >
+| < IF: "if" >
+| < WHILE: "while" >
+| < FOR: "for" >
+| < INTEGER: "integer" >   
+| < LENGTH: "length" >
+| < MAIN: "main" >
+| < NEW: "new" >
+| < PUBLIC: "public" >
+| < RETURN: "return" >
+| < STATIC: "static" >
+| < STRING: "String" >
+| < THIS: "this" >
+| < TRUE: "true" >
+| < PRINT: "print" >
+| < PRINTLN: "println" >
+| < VOID: "void" >  
+| < INTEGER_LITERAL: ( ["1"-"9"] (["0"-"9"])* | "0" ) >  
+| < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>|"_")* > 
+| < #LETTER: ["a"-"z","A"-"Z"] >
+| < #DIGIT: ["0"-"9"] >  
+// | < #SUM: <EXPR>"+"<EXPR> >
+// | < EXPR: ("(" <SUM> ")") | <DIGIT>(<DIGIT>)* >
+}
+
+
+
+void Goal() :
+{}
+{  
+  /* ( RamToken() )*  <EOF> */
+  Program() <EOF> 
+}
+
+void RamToken():
+{}
+{
+  <CLASS>  |  <IDENTIFIER> | <LBRACE> | <PUBLIC> | <STATIC> | <VOID> |
+  <MAIN> | <LPAREN> | <STRING> | <LSQPAREN> | <RSQPAREN> | <RPAREN> | <RBRACE> |
+  <PLUSEQUALS> | <MINUSEQUALS> | <SEMICOLON> | <RETURN> | <COMMA> | <INTEGER> | <BOOLEAN> | <ASSIGN> |
+  <IF> | <ELSE> | <WHILE> | <COLON> | <PRINT> | <PRINTLN> | <AND> |
+  <OR> | <LESSTHAN> | <EQUALITY> | <PLUS> | <MINUS> | <TIMES> |
+  <DOT> | <LENGTH> | <INTEGER_LITERAL> | <TRUE> | <FALSE> | <THIS> | <NEW> |
+  <NOT>
+}
+
+void Program() :
+{}
+{
+    MainClass() ( ClassDecl() )*
+}
+
+void MainClass() :
+{}
+{
+    <CLASS> <IDENTIFIER> <LBRACE> <PUBLIC> <STATIC> <VOID> <MAIN> <LPAREN> 
+    <STRING> <LSQPAREN> <RSQPAREN> <IDENTIFIER> <RPAREN> <LBRACE> 
+    Statement() 
+    <RBRACE> <RBRACE>
+}
+
+void ClassDecl() :
+{}
+{
+    <CLASS> <IDENTIFIER> <LBRACE> 
+    ( VarDecl() )*
+    ( MethodDecl() )*
+    <RBRACE>
+}
+
+void VarDecl() :
+{}
+{
+    Type()
+    <IDENTIFIER>
+    <SEMICOLON>
+}
+
+void MethodDecl() :
+{}
+{
+    <PUBLIC>
+    Type()
+    <IDENTIFIER>
+    <LPAREN> FormalList() <RPAREN> <LBRACE>
+    (LOOKAHEAD(2) VarDecl() )*
+    ( Statement() )*
+    <RETURN>
+    Exp()
+    <SEMICOLON>
+    <RBRACE>
+}
+
+void FormalList() :
+{}
+{
+    [ Type() <IDENTIFIER> ( FormalRest() )* ]
+}
+
+void FormalRest() :
+{}
+{
+    <COMMA> Type() <IDENTIFIER>
+}
+
+void Type() :
+{}
+{
+    LOOKAHEAD(2)
+    <INTEGER> <LSQPAREN> <RSQPAREN>
+    |
+    <BOOLEAN>
+    |
+    <INTEGER>
+    |
+    <IDENTIFIER>
+}
+
+void Statement() :
+{}
+{
+    <LBRACE> ( Statement() )* <RBRACE>
+    |
+    <IF> <LPAREN> Exp() <RPAREN> Statement() <ELSE> Statement()
+    |
+    <WHILE> <LPAREN> Exp() <RPAREN> Statement()
+    |
+    <PRINT> <LPAREN> ExpList() <RPAREN> <SEMICOLON>
+    |
+    <PRINTLN> <LPAREN> ExpList() <RPAREN> <SEMICOLON>
+    |
+    LOOKAHEAD(2)
+    <IDENTIFIER> <ASSIGN> Exp() <SEMICOLON>
+    |
+    LOOKAHEAD(2)
+    <IDENTIFIER> <PLUSEQUALS> Exp() <SEMICOLON>
+    |
+    LOOKAHEAD(2)
+    <IDENTIFIER> <MINUSEQUALS> Exp() <SEMICOLON>
+    |
+    <IDENTIFIER> <LSQPAREN> Exp() <RSQPAREN> <ASSIGN> Exp() <SEMICOLON>
+}
+
+/* 
+Exp production in original grammar:
+
+Exp -> Exp op Exp
+	-> Exp [ Exp ]
+	-> Exp [ Exp : ]
+	-> Exp [ : Exp ]
+	-> Exp [ Exp : Exp ]
+    -> Exp [ : ]
+	-> Exp . length
+	-> Exp . id ( ExpList )
+	-> INTEGER_LITERAL
+	-> true
+	-> false
+	-> id
+	-> this
+	-> new int [ Exp ]
+	-> new id ( )
+	-> ! Exp
+	-> ( Exp )
+
+Non-left-recursive rewrite of Exp:
+
+Exp -> INTEGER_LITERAL Exp'
+	-> true Exp'
+	-> false Exp'
+	-> id Exp'
+	-> this Exp'
+	-> new int [ Exp ] Exp'
+	-> new id ( ) Exp'
+	-> ! Exp Exp'
+	-> ( Exp ) Exp'
+
+Exp'-> op Exp Exp'
+	-> [ Exp ] Exp'
+    -> [ Exp : ] Exp'
+    -> [ : Exp ] Exp'
+    -> [ Exp : Exp ] Exp'
+    -> [ : ] Exp'
+	-> . length Exp' 
+	-> . id ( ExpList ) Exp'
+	-> 
+*/
+
+void Exp() :
+{}
+{
+    <INTEGER_LITERAL> ExpPrime()
+    |
+    <TRUE> ExpPrime()
+    |
+    <FALSE> ExpPrime()
+    |
+    <IDENTIFIER> ExpPrime()
+    |
+    <THIS> ExpPrime()
+    |
+    LOOKAHEAD(2)
+    <NEW> <INTEGER> <LSQPAREN> Exp() <RSQPAREN> ExpPrime()
+    |
+    <NEW> <IDENTIFIER> <LPAREN> <RPAREN> ExpPrime()
+    |
+    <NOT> Exp() ExpPrime()
+    |
+    <LPAREN> Exp() <RPAREN> ExpPrime()
+}
+
+void ExpPrime() :
+{}
+{
+    [
+        LOOKAHEAD(1)      // suppresses warning message, don't think this makes any semantic difference
+        (
+        Op() Exp() ExpPrime()
+        |
+        LOOKAHEAD(3)
+        <LSQPAREN> <COLON> Exp() <RSQPAREN> ExpPrime()
+        |
+        LOOKAHEAD(2)
+        <LSQPAREN> <COLON> <RSQPAREN> ExpPrime()
+        |
+        <LSQPAREN> Exp() ExpPrimePrime() ExpPrime()
+        |
+        LOOKAHEAD(2)
+        <DOT> <LENGTH> ExpPrime()
+        |
+        <DOT> <IDENTIFIER> <LPAREN> ExpList() <RPAREN> ExpPrime()
+        )
+    ]
+}
+
+void ExpPrimePrime() :
+{}
+{
+    <RSQPAREN> ExpPrime()
+    |
+    LOOKAHEAD(2)
+    <COLON> Exp() <RSQPAREN>
+    |
+    <COLON> <RSQPAREN>
+}
+
+void ExpList() :
+{}
+{
+    [ Exp() ( ExpRest() )* ]
+}
+
+void ExpRest() :
+{}
+{
+    <COMMA> Exp()
+}
+
+void Op() :
+{}
+{
+    <AND> | <OR> | <LESSTHAN> | <EQUALITY> | <PLUS> | <MINUS> | <TIMES>
+}
