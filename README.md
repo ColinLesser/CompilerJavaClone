@@ -1,5 +1,6 @@
 # CompilerJavaClone
 Design and Construction of a Compiler for a Java clone
+
 A large-scale project consisting of developing a lexical analyzer, parser, abstract syntax tree, symbol table, activation code, and intermediate code generation, and finally generating assembly code will be implemented. 
 
 First, I developed a lexical analyzer to define what is a legal token and what is not. The lexical analyzer breaks down syntaxes into series of tokens. If a token is deemed invalid, it generates an error. I used the Java Compiler Compiler (JavaCC) facilitate the development of this step.
